@@ -124,7 +124,7 @@ CanvasHelper::CanvasHelper() {
 
 // Destructor
 CanvasHelper::~CanvasHelper() {
-  // delete fgInstance;
+  delete fgInstance;
 }
 
 // Instance provider
@@ -153,10 +153,10 @@ const Int_t CanvasHelper::AXIS_TICK_LENGTH = 20;
 
 const Int_t CanvasHelper::MARGIN_LEFT = 25;
 const Int_t CanvasHelper::MARGIN_TOP = 30;       // In particular this is for TGaxis::PaintAxis() x10^3 label
-const Int_t CanvasHelper::MARGIN_RIGHT = 10;     // In particular this is for TGaxis::PaintAxis() x10^3 label
+const Int_t CanvasHelper::MARGIN_RIGHT = 40;     // In particular this is for TGaxis::PaintAxis() x10^3 label
 const Int_t CanvasHelper::MARGIN_BOTTOM = 10;
 
-const Int_t CanvasHelper::TITLE_VSPACE = 15;
+const Int_t CanvasHelper::TITLE_VSPACE = 25;
 const Int_t CanvasHelper::SUBTITLE_VSPACE = 20;
 const Int_t CanvasHelper::PAVELINE_VSPACE = 22;
 const Int_t CanvasHelper::AXISTITLE_VSPACE = 20;
@@ -538,7 +538,7 @@ void CanvasHelper::processPad(TVirtualPad *pad) {
   alignSubtitle(pad);
   alignAllPaves(pad);
   setPadMargins(pad);
-  // setPadCustomFrameBorder(pad); // should go after setPadMargins();
+  setPadCustomFrameBorder(pad); // should go after setPadMargins();
   setPadNDivisions(pad);
 
   pad->Modified();
@@ -734,7 +734,6 @@ void CanvasHelper::setPadMargins(TVirtualPad *pad) {
 
 // Function prevents double border with left (and potentially bottom axis)
 // TODO: account on existing axis, add maybe left line if needed - rear case
-// TODO: lines get into the legend... need workaround
 void CanvasHelper::setPadCustomFrameBorder(TVirtualPad *pad) {
   TFrame* frame = (TFrame*)(pad->GetListOfPrimitives()->FindObject("TFrame"));
   if (!frame) return;

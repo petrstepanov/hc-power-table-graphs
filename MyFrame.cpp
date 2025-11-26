@@ -134,25 +134,25 @@ void MyFrame::onPlotButtonClicked() {
     TCanvas* canvas = embedCanvas->GetCanvas();
     canvas->Clear();
 
-    // Split canvas
+    // Split canvases and leave no space in between , 1E-5, 1E-5);
     switch (nCanvases){
         case 2:
-            canvas->Divide(nCanvases, 1, 0, 0);
+            canvas->Divide(nCanvases, 1, 1E-5, 1E-5);
             break;
         case 3:
-            canvas->Divide(nCanvases, 1, 0, 0);
+            canvas->Divide(nCanvases, 1, 1E-5, 1E-5);
             break;
         case 4:
-            canvas->Divide(2, 2, 0, 0);
+            canvas->Divide(2, 2, 1E-5, 1E-5);
             break;
         case 5:
-            canvas->Divide(3, 2, 0, 0);
+            canvas->Divide(3, 2, 1E-5, 1E-5);
             break;
         case 6:
-            canvas->Divide(3, 2, 0, 0);
+            canvas->Divide(3, 2, 1E-5, 1E-5);
             break;
         default:
-            canvas->Divide(3, 2, 0, 0);
+            canvas->Divide(3, 2, 1E-5, 1E-5);
             break;
     }
     int canvasIndex = 1;
@@ -162,14 +162,17 @@ void MyFrame::onPlotButtonClicked() {
         // Create multi-graph
         TMultiGraph* mg = new TMultiGraph();
 
-        // Iterate over\ each laser for given lens and create graphs
+        // Iterate over each laser for given lens and create graphs
         std::map<TString, XYPoints> laserDataMapForLens = laserDataMap[lensIdInt];
-        for (auto const& [laserName, xyPoints] : laserDataMapForLens){
-            // Create new graph
-            TGraph* graph = new TGraph();
-            TString title = lensName;
-            title += "x ";
-            title += laserName;
+
+        // Remove zero points and points 1...10
+        // for (auto const& [laserName, xyPoints] : laserDataMapForLens){
+        std::map<TString, XYPoints>::iterator it;
+        // Remove pair while iterating the map
+        // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it
+        for (it = laserDataMapForLens.begin(); it != laserDataMapForLens.end(); /*it++*/){
+            auto laserName = it->first;
+            auto xyPoints = it->second;
 
             // Populate data points
             Bool_t allPointsZero = kTRUE;   // Power values are all 0
@@ -179,24 +182,59 @@ void MyFrame::onPlotButtonClicked() {
                 double y = xyPoints.y[i];
                 if (y != 0) allPointsZero = kFALSE;
                 if (y != i) allPoints1To10 = kFALSE;
-                graph->AddPoint(x, y);
-                std::cout << title << " " << x << " " << y << std::endl;
             }
 
             // If data is empty - skip graph
             if (allPointsZero || allPoints1To10){
-                delete graph;
-                continue;
+                laserDataMapForLens.erase(it++);
+            }
+            else {
+                ++it;
+            }
+        }
+
+        // Draw multi-graph on the canvas
+        TVirtualPad* pad = canvas->cd(canvasIndex);
+
+        // Iterate "useful" graph data
+        std::map<TString, XYPoints>::iterator it2;
+        for (it2 = laserDataMapForLens.begin(); it2 != laserDataMapForLens.end(); it2++){
+            // for (auto const& [laserName, xyPoints] : laserDataMapForLens){
+            auto laserName = it2->first;
+            auto xyPoints = it2->second;
+            // Create new graph
+            TGraph* graph = new TGraph();
+            TString title = lensName;
+            title += "x ";
+            title += laserName;
+
+            // Populate data points
+            // Bool_t allPointsZero = kTRUE;   // Power values are all 0
+            // Bool_t allPoints1To10 = kTRUE;  // Power values are default 1,2,3,4,54,6,7,8,9,10
+            for (int i=0; i < 11; i++){
+                double x = xyPoints.x[i];
+                double y = xyPoints.y[i];
+                graph->AddPoint(x, y);
+                std::cout << title << " " << x << " " << y << std::endl;
             }
 
             // Visual styling
             graph->SetTitle(title);
             graph->SetMarkerStyle(laserMarkerStyles[laserName]);
+
+
             mg->Add(graph);
+            // Hack - see ROOT's TMultigraph example - draw last graph, not add. Otherwise legend issue
+            // https://root.cern.ch/doc/master/classTMultiGraph.html
+            // auto lastPair = std::prev(laserDataMapForLens.end());
+            // if (it2 != lastPair){
+            //     mg->Add(graph);
+            // }
+            // else {
+            //     graph->Draw("ALP");
+            // }
         }
 
-        // Draw multi-graph on the canvas
-        TVirtualPad* pad = canvas->cd(canvasIndex);
         // TString title = lensName;
         TString title = ";Laser Intensity, %;Power Delivered to Sample, mW";
         mg->SetTitle(title);
@@ -208,9 +246,11 @@ void MyFrame::onPlotButtonClicked() {
         // mg->GetYaxis()->CenterTitle(true);
 
         // Build and align legend
-        // Cannot do it here because flegend creation interferes with other primitives!
+        // Cannot do it here because legend creation interferes with other primitives!
         // Solution - build Legend very small in top left corner - so it does not interfere
+        // pad->BuildLegend();
         pad->BuildLegend(0.01, 0.99, 0.02, 1);
+
 
         // Set grid after legend was generated to reduce interference
         pad->SetGrid();
