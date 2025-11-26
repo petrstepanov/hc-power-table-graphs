@@ -38,14 +38,22 @@ public:
     TGTextButton* exitButton;
     TGTextButton* saveButton;
 
+    struct XYPoints {
+        double x[11];
+        double y[11];
+    };
 
     // Variables
 	TString configPath;
     std::map<int, TString> lensIdMap;
+    std::map<TString, int> laserMarkerStyles;
+    int myMarkerStyles[15] = {2, 5, 3, 25, 24, 20, 4, 21, 22, 30, 23, 29, 26, 33, 34};
+    std::map<int, std::map<TString, XYPoints>> laserDataMap;
 
     // Methods
     void clearCanvas();
-    void ProcessLensNode(TXMLEngine* xml, XMLNodePointer_t node, Int_t level);
+    int processLensXML();
+    int processLaserXML();
 
     // SLOTS
     void onPathButtonClicked();

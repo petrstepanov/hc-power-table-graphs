@@ -7,4 +7,6 @@
 // Frames with SIGNALS
 #pragma link C++ class MyMainFrame+;
 #pragma link C++ class MyFrame+;
+#pragma link C++ class TNamedLine+;
+#pragma link C++ class CanvasHelper+;
 #endif

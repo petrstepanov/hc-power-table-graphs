@@ -1,4 +1,4 @@
-﻿ # CMakeList.txt : CMake project for RootTest, include source and define
+﻿# CMakeList.txt : CMake project for RootTest, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.8)
@@ -28,12 +28,14 @@ set(SOURCES
 set(SOURCES_FOR_DICT
     ${CMAKE_CURRENT_SOURCE_DIR}/MyMainFrame.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MyFrame.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CanvasHelper.cpp
 )
 
 # Define header files (for dictionary generation only)
 set(HEADERS_FOR_DICT
     ${CMAKE_CURRENT_SOURCE_DIR}/MyMainFrame.h
     ${CMAKE_CURRENT_SOURCE_DIR}/MyFrame.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CanvasHelper.h
 )
 
 # Need to specify include directories for custome headers (

@@ -16,7 +16,13 @@
 #include <TGFileDialog.h>
 #include <TGMsgBox.h>
 #include <TSystem.h>
+#include <TCanvas.h>
+#include <TMultiGraph.h>
+#include <TAxis.h>
+#include <TGraph.h>
 #include <TApplication.h>
+#include <TVirtualPad.h>
+#include "CanvasHelper.h"
 #include "MyFrame.h"
 
 // Need for SIGNALS/SLOTS below - Connect to exit()
@@ -95,6 +101,13 @@ void MyFrame::onPathButtonClicked() {
         // delete fileDialog;
         return;
     }
+    // Error - Cancel button clicked
+    if (fi.fFilename == nullptr){
+        plotButton->SetEnabled(kFALSE);
+        // delete msgBox;
+        // delete fileDialog;
+        return;
+    }
     // Error - dir not exist
     if (gSystem->AccessPathName(fi.fFilename, EAccessMode::kFileExists)){
         TGMsgBox* msgBox = new TGMsgBox(gClient->GetRoot(), this, "Error", "Directory does not exist", EMsgBoxIcon::kMBIconStop, EMsgBoxButton::kMBOk);
@@ -106,11 +119,124 @@ void MyFrame::onPathButtonClicked() {
     plotButton->SetEnabled(kTRUE);
     pathLabel->SetText(fi.fFilename);
     configPath = TString::Format(fi.fFilename);
-    lensIdMap.clear();
     // delete fileDialog;
 }
 
 void MyFrame::onPlotButtonClicked() {
+    // Get NIR lens map
+    processLensXML();
+
+    // Get power data points
+    processLaserXML();
+
+    // Prepare canvas
+    Int_t nCanvases = lensIdMap.size();
+    TCanvas* canvas = embedCanvas->GetCanvas();
+    canvas->Clear();
+
+    // Split canvas
+    switch (nCanvases){
+        case 2:
+            canvas->Divide(nCanvases, 1, 0, 0);
+            break;
+        case 3:
+            canvas->Divide(nCanvases, 1, 0, 0);
+            break;
+        case 4:
+            canvas->Divide(2, 2, 0, 0);
+            break;
+        case 5:
+            canvas->Divide(3, 2, 0, 0);
+            break;
+        case 6:
+            canvas->Divide(3, 2, 0, 0);
+            break;
+        default:
+            canvas->Divide(3, 2, 0, 0);
+            break;
+    }
+    int canvasIndex = 1;
+
+    // Iterate over lens map
+    for (auto const& [lensIdInt, lensName] : lensIdMap){
+        // Create multi-graph
+        TMultiGraph* mg = new TMultiGraph();
+
+        // Iterate over\ each laser for given lens and create graphs
+        std::map<TString, XYPoints> laserDataMapForLens = laserDataMap[lensIdInt];
+        for (auto const& [laserName, xyPoints] : laserDataMapForLens){
+            // Create new graph
+            TGraph* graph = new TGraph();
+            TString title = lensName;
+            title += "x ";
+            title += laserName;
+
+            // Populate data points
+            Bool_t allPointsZero = kTRUE;   // Power values are all 0
+            Bool_t allPoints1To10 = kTRUE;  // Power values are default 1,2,3,4,54,6,7,8,9,10
+            for (int i=0; i < 11; i++){
+                double x = xyPoints.x[i];
+                double y = xyPoints.y[i];
+                if (y != 0) allPointsZero = kFALSE;
+                if (y != i) allPoints1To10 = kFALSE;
+                graph->AddPoint(x, y);
+                std::cout << title << " " << x << " " << y << std::endl;
+            }
+
+            // If data is empty - skip graph
+            if (allPointsZero || allPoints1To10){
+                delete graph;
+                continue;
+            }
+
+            // Visual styling
+            graph->SetTitle(title);
+            graph->SetMarkerStyle(laserMarkerStyles[laserName]);
+            mg->Add(graph);
+        }
+
+        // Draw multi-graph on the canvas
+        TVirtualPad* pad = canvas->cd(canvasIndex);
+        // TString title = lensName;
+        TString title = ";Laser Intensity, %;Power Delivered to Sample, mW";
+        mg->SetTitle(title);
+        mg->Draw("ALP");
+
+        // ROOT is terrible. Need to do things in "its" right o
+        // mg->GetXaxis()->SetLimits(0, 100);
+        // mg->GetXaxis()->CenterTitle(true);
+        // mg->GetYaxis()->CenterTitle(true);
+
+        // Build and align legend
+        // Cannot do it here because flegend creation interferes with other primitives!
+        // Solution - build Legend very small in top left corner - so it does not interfere
+        pad->BuildLegend(0.01, 0.99, 0.02, 1);
+
+        // Set grid after legend was generated to reduce interference
+        pad->SetGrid();
+
+        // Now we align the legend that it was added - via CanvasHelper
+        TLegend *legend = CanvasHelper::getDefaultLegend(pad);
+        CanvasHelper::setPaveAlignment(legend, kPaveAlignLeft | kPaveAlignTop);
+
+        // Remember switch to next canvas
+        canvasIndex++;
+    }
+
+    // Add multi title with modified date
+    TString title = "Laser Power Table Graphs";
+    TString filename = configPath;
+    filename += "/Configuration/Common/System/LaserPower.setting.xml";
+    FileStat_t fs;
+    gSystem->GetPathInfo(filename.Data(), fs);
+    title += fs.fMtime;
+    CanvasHelper::addMultiCanvasTitle(canvas, title);
+
+    // Tweak canvas
+    CanvasHelper::getInstance()->addCanvas(canvas);
+}
+
+int MyFrame::processLensXML() {
     TString filename = configPath;
     filename += "/";
     filename += "Configuration";
@@ -121,8 +247,8 @@ void MyFrame::onPlotButtonClicked() {
     filename += "/";
     filename += "Lens.setting.xml";
 
-
-    std::cout << filename << std::endl;
+    // Check if file exists
+    if (gSystem->AccessPathName(filename, EAccessMode::kFileExists) == kTRUE) return 1;
 
     // First create engine
     TXMLEngine* xml = new TXMLEngine();
@@ -132,36 +258,143 @@ void MyFrame::onPlotButtonClicked() {
     XMLDocPointer_t xmldoc = xml->ParseFile(filename);
     if (xmldoc == 0) {
         delete xml;
-        return;
+        return 2;
     }
     // take access to main node
     XMLNodePointer_t mainnode = xml->DocGetRootElement(xmldoc); // <LensSetting>
-    XMLNodePointer_t child1 = xml->GetChild(mainnode);            // <Turret>, <Option>, <Lens>, <Lens>, <Lens>...
-    while (child1 != 0) {
-        ProcessLensNode(xml, child1, 1);
-		child1 = xml->GetNext(child1);
+    XMLNodePointer_t node = xml->GetChild(mainnode);      // <Turret>, <Option>, <Lens>, <Lens>, <Lens>...
+
+    // Clear existing map
+    lensIdMap.clear();
+
+    // Process "Lens" nodes
+    while (node != 0) {
+        // Ensure the node is <Lens> - skip <Turret> and <Option>
+        if (strcmp(xml->GetNodeName(node), "Lens") != 0){
+            node = xml->GetNext(node);
+            continue;
+        }
+
+        // Get LensID attribute
+        TString lensID = xml->GetAttr(node, "LensID");
+        Int_t lensIDInt = lensID.Atoi();
+
+        // Ensure this lensID is not added to the map already
+        if (lensIdMap.find(lensIDInt) != lensIdMap.end()){
+            node = xml->GetNext(node);
+            continue;
+        }
+
+        // Obtain lens magnification
+        XMLNodePointer_t nodeMag = xml->GetChild(node);
+        TString lensMag = xml->GetNodeContent(nodeMag);
+
+        // Obtain lens wavelength
+        XMLNodePointer_t nodeWl = xml->GetNext(nodeMag);
+        TString lensWl = xml->GetNodeContent(nodeWl);
+
+        // Filter out 0.01x lens
+        if (lensMag == "0.01"){
+            node = xml->GetNext(node);
+            continue;
+        }
+
+        // Ensure wavelength is NIR or VIS (20x, 50x, 100x)
+        if (!(lensWl == "NIR" || lensWl == "VIS")){
+            node = xml->GetNext(node);
+            continue;
+        }
+
+        // Add lens entry to the map
+        lensIdMap[lensIDInt] = lensMag;
+
+        // Move to next node
+        node = xml->GetNext(node);
     }
 
     // Release memory before exit
     xml->FreeDoc(xmldoc);
     delete xml;
+    return 0;
 }
 
-void MyFrame::ProcessLensNode(TXMLEngine* xml, XMLNodePointer_t node, Int_t level){
-    // this function display all accessible information about xml node and its children
-    printf("%*c node: %s\n", level, ' ', xml->GetNodeName(node));
-    if (strcmp(xml->GetNodeName(node), "Lens") == 0) {
-        TString lensID = xml->GetAttr(node, "LensID");
-		Int_t lensIDInt = lensID.Atoi();
-        if (lensIdMap.find(lensIDInt) == lensIdMap.end()) {
-            XMLNodePointer_t nodeMag = xml->GetChild(node);
-            TString lensMag = xml->GetNodeContent(nodeMag);
-            lensMag += "x";
-			lensIdMap[lensIDInt] = lensMag;
-            std::cout << "LensID: " << lensIDInt << " Magnification: " << lensMag << std::endl;
-        }
+int MyFrame::processLaserXML() {
+    TString filename = configPath;
+    filename += "/";
+    filename += "Configuration";
+    filename += "/";
+    filename += "Common";
+    filename += "/";
+    filename += "System";
+    filename += "/";
+    filename += "LaserPower.setting.xml";
+
+    // Clear existing map
+    laserDataMap.clear();
+
+    // Check if file exists
+    if (gSystem->AccessPathName(filename, EAccessMode::kFileExists) == kTRUE) return 1;
+
+    // First create engine
+    TXMLEngine* xml = new TXMLEngine();
+
+    // Now try to parse xml file
+    // Only file with restricted xml syntax are supported
+    XMLDocPointer_t xmldoc = xml->ParseFile(filename);
+    if (xmldoc == 0) {
+        delete xml;
+        return 2;
     }
+    // take access to main node
+    XMLNodePointer_t mainnode = xml->DocGetRootElement(xmldoc); // <LaserPowerSettingParameter>
+    XMLNodePointer_t child1 = xml->GetChild(mainnode);          // <Powers>
+    XMLNodePointer_t node = xml->GetChild(child1);            // <Setting>
+
+    Int_t currentLaserMarkerIndex = 0;
+    while (node != 0) {
+        // Ensure the node is <Lens> - skip <Turret> and <Option>
+        if (strcmp(xml->GetNodeName(node), "Setting") != 0){
+            node = xml->GetNext(node);
+            continue;
+        }
+
+        // Get LensID attribute
+        Int_t lensIDInt = xml->GetIntAttr(node, "LensID");
+
+        // Get laser type
+        TString laserType = xml->GetAttr(node, "LaserType");
+
+        // Get laser percentage
+        Int_t laserPercentageInt = xml->GetIntAttr(node, "LaserPowerPercentage");
+
+        // Get laser power node
+        XMLNodePointer_t powerNode = xml->GetChild(node); // <LaserPowerWattage
+        TString wattage = xml->GetNodeContent(powerNode);
+        Double_t wattageDouble = wattage.Atof();
+
+        // Save data in the map
+        std::map<TString, XYPoints> laserDataMapForLens = laserDataMap[lensIDInt];
+        XYPoints xyPoints = laserDataMapForLens[laserType];
+        xyPoints.x[laserPercentageInt/10] = laserPercentageInt;
+        xyPoints.y[laserPercentageInt/10] = wattageDouble;
+        laserDataMapForLens[laserType] = xyPoints;
+        laserDataMap[lensIDInt] = laserDataMapForLens;
+
+        // Remember lasers to assign markers
+        if (laserMarkerStyles.find(laserType) == laserMarkerStyles.end()){
+            laserMarkerStyles[laserType] = myMarkerStyles[currentLaserMarkerIndex];
+            currentLaserMarkerIndex++;
+        }
+        // Move to next node
+        node = xml->GetNext(node);
+    }
+
+    // Release memory before exit
+    xml->FreeDoc(xmldoc);
+    delete xml;
+    return 0;
 }
+
 
 void MyFrame::onExitButtonClicked() {
     gApplication->Terminate();
