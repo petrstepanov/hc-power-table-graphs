@@ -18,6 +18,7 @@
 #include <TSystem.h>
 #include <TCanvas.h>
 #include <TMultiGraph.h>
+#include <TTimeStamp.h>
 #include <TAxis.h>
 #include <TGraph.h>
 #include <TApplication.h>
@@ -263,13 +264,23 @@ void MyFrame::onPlotButtonClicked() {
         canvasIndex++;
     }
 
-    // Add multi title with modified date
-    TString title = "Laser Power Table Graphs";
+    // Add multi-title with modified date
+    TString title = "Laser Power Table Graphs ";
+
+    // Add time-stamp to the title
     TString filename = configPath;
     filename += "/Configuration/Common/System/LaserPower.setting.xml";
     FileStat_t fs;
     gSystem->GetPathInfo(filename.Data(), fs);
-    title += fs.fMtime;
+
+    TTimeStamp* timeStamp = new TTimeStamp();
+    timeStamp->Set((UInt_t)fs.fMtime, kFALSE, 0, kFALSE);
+    TString timeStampString = timeStamp->AsString("s");
+    Int_t space = timeStampString.First(' ');
+    Int_t len = timeStampString.Length();
+    timeStampString.Remove(space,len-space);
+
+    title += timeStampString.Data();
     CanvasHelper::addMultiCanvasTitle(canvas, title);
 
     // Tweak canvas
