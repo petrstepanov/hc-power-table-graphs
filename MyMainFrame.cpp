@@ -29,9 +29,7 @@ MyMainFrame::MyMainFrame() : TGMainFrame(gClient->GetRoot(), 1024, 600) {
     Connect("CloseWindow()", "MyMainFrame", this, "exit()");
     DontCallClose();
 
-    // Save reverence to MyMainFrame in UiHelper (for centering of modal dialogs)
-    // UiHelper::getInstance()->setMainFrame(this);
-
+    // Add child TGFrame
     myFrame = new MyFrame(this);
     AddFrame(myFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 15, 15, 10, 10));
 
@@ -45,6 +43,9 @@ MyMainFrame::MyMainFrame() : TGMainFrame(gClient->GetRoot(), 1024, 600) {
     // Maps the window "id" and all of its subwindows that have had map requests on the screen
     // and put this window on the top of of the stack of all windows
     MapWindow();
+
+    // Change all sub frame colors to gray
+    ChangeSubframesBackground(15263976);
 }
 
 MyMainFrame::~MyMainFrame() {

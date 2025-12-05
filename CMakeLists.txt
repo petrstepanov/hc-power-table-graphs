@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("RootTest" LANGUAGES CXX)
+project ("PowerGraphs" LANGUAGES CXX)
 
 # Find ROOT installation
 # Ensure ROOT is set up in your environment (e.g., b "LinkDef.h"y sourcing thisroot.sh)
@@ -22,6 +22,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Define source files
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DateHelper.cpp
+)
+
+set(HEDERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/DateHelper.h
 )
 
 # Define source files (for dictionary generation only)
@@ -31,7 +36,7 @@ set(SOURCES_FOR_DICT
     ${CMAKE_CURRENT_SOURCE_DIR}/CanvasHelper.cpp
 )
 
-# Define header files (for dictionary generation only)
+# Define header files (both - for dictionary generation & other program headers they depend on)
 set(HEADERS_FOR_DICT
     ${CMAKE_CURRENT_SOURCE_DIR}/MyMainFrame.h
     ${CMAKE_CURRENT_SOURCE_DIR}/MyFrame.h
@@ -44,19 +49,19 @@ set(HEADERS_FOR_DICT
 # Generate dictionary "G__${PROJECT_NAME}.cxx" - from headers with ClassDef and LinkDef.h
 root_generate_dictionary(
     G__${PROJECT_NAME} 
-    ${HEADERS_FOR_DICT} 
+    ${HEADERS_FOR_DICT}
     MODULE lib${PROJECT_NAME} 
     LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/LinkDef.h
 )
 
-# TODO: do we need module above?
-# Dict ${CMAKE_CURRENT_SOURCE_DIR}/src/MyClass.h MODULE lib${PROJECT_NAME}  LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/src/MyLinkDef.h)
-add_library(lib${PROJECT_NAME} SHARED ${SOURCES_FOR_DICT} G__${PROJECT_NAME}.cxx "MyFrame.cpp" "MyFrame.h")
+# Our shared library source files include headers (DateHelper.h), we need to tell CMake where to find them
+# https://runebook.dev/en/articles/cmake/command/add_library
+include_directories(./)
 
-# Create shared library
+# Create shared library but first specify.CMake adds "lib" prefix automatically
+add_library(${PROJECT_NAME}Lib SHARED ${SOURCES_FOR_DICT} G__${PROJECT_NAME}.cxx)
 
 # Compose list of ROOT libraries with "ROOT::" prefix - need to link them to the shared library
-# Append required ROOT libs to the list
 set(LIB_NAMES "")
 list(APPEND LIB_NAMES "ROOT::Core")
 list(APPEND LIB_NAMES "ROOT::Gui")
@@ -75,21 +80,22 @@ list(APPEND LIB_NAMES "ROOT::Hist")
 #list(APPEND LIB_NAMES "ROOT::Rint")
 #list(APPEND LIB_NAMES "ROOT::Tree")
 list(APPEND LIB_NAMES "ROOT::XMLIO")
-list(APPEND LIB_NAMES "ROOT::XMLParser")
+list(APPEND LIB_NAMES  "ROOT::XMLParser")
 
-# Link ROOT libraries to shared library
-target_link_libraries(lib${PROJECT_NAME} ${LIB_NAMES})
+# Link ROOT libraries to generated shared library
+target_link_libraries(${PROJECT_NAME}Lib ${LIB_NAMES})
 
 # Depend shared library on dict generation to rebuld automatically
 # add_dependencies(lib${PROJECT_NAME} G__${PROJECT_NAME})
 
 # This is required for successful linking on Windows
 if(MSVC)
-   set_target_properties(lib${PROJECT_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+   set_target_properties(${PROJECT_NAME}Lib PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 # This should go last
-add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES_FOR_DICT} "MyFrame.cpp" "MyFrame.h")
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 # Link executable to the shared library
-target_link_libraries(${PROJECT_NAME} PUBLIC lib${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_NAME}Lib)
+

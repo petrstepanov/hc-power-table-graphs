@@ -19,7 +19,9 @@
 #include <TCanvas.h>
 #include <TMultiGraph.h>
 #include <TTimeStamp.h>
+#include <DateHelper.h>
 #include <TAxis.h>
+#include <TText.h>
 #include <TGraph.h>
 #include <TApplication.h>
 #include <TVirtualPad.h>
@@ -52,11 +54,23 @@ MyFrame::MyFrame(const TGWindow* p) : TGVerticalFrame(p) {
     hLine = new TGHorizontal3DLine(this);
     AddFrame(hLine, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
 
+    // Add embedded canvas and set its frame to Sunken
+    // https://root.cern/doc/master/TGFrame_8cxx_source.html#l00360
     embedCanvas = new TRootEmbeddedCanvas("embedHist", this, 10, 10, EFrameType::kChildFrame); // EFrameType::kChildFrame - no border
+    // embedCanvas->GetCanvas()->SetEditable(kFALSE);
+    // embedCanvas->GetCanvas()->SetBit(kNoContextMenu);
+    // embedCanvas->GetCanvas()->SetFillColor(kGray-1);
+
+    embedCanvas->GetCanvas()->cd();
+    TText t;
+    t.SetTextSize(0.025);
+    t.SetTextAlign(kHAlignCenter + kVAlignCenter);
+    t.DrawText(0.5, 0.5, "Please Specify SemiShop Root Folder");
+
     AddFrame(embedCanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, dy, 0));
 
     hLine2 = new TGHorizontal3DLine(this);
-    AddFrame(hLine2, new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 0));
+    AddFrame(hLine2, new TGLayoutHints(kLHintsExpandX, 0, 0, dy, 0));
 
     hFrame2 = new TGHorizontalFrame(this);
 
@@ -85,6 +99,22 @@ MyFrame::~MyFrame() {
 
 void MyFrame::clearCanvas() {
     embedCanvas->Clear();
+}
+
+void MyFrame::onSaveButtonClicked() {
+    TString filename = configPath;
+    filename += "/Configuration/Common/System/LaserPower.setting.xml";
+    FileStat_t fs;
+    gSystem->GetPathInfo(filename.Data(), fs);
+    TString workDir = gSystem->GetWorkingDirectory();
+    TString fileName = DateHelper::formatTimeStamp(fs.fMtime);
+    fileName += ".png";
+    TString pathName = gSystem->ConcatFileName(workDir, fileName);
+    embedCanvas->SaveAs(pathName);
+
+    // Message box success
+    TString text = TString::Format("Image \"%s\" successfully saved.", pathName.Data());
+    TGMsgBox* box = new TGMsgBox(gClient->GetRoot(), this, "Success", text.Data(), EMsgBoxIcon::kMBIconAsterisk, EMsgBoxButton::kMBOk);
 }
 
 void MyFrame::onPathButtonClicked() {
@@ -167,17 +197,16 @@ void MyFrame::onPlotButtonClicked() {
         std::map<TString, XYPoints> laserDataMapForLens = laserDataMap[lensIdInt];
 
         // Remove zero points and points 1...10
-        // for (auto const& [laserName, xyPoints] : laserDataMapForLens){
         std::map<TString, XYPoints>::iterator it;
-        // Remove pair while iterating the map
+        // TRICK: Remove pairs while iterating the map
         // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it
         for (it = laserDataMapForLens.begin(); it != laserDataMapForLens.end(); /*it++*/){
             auto laserName = it->first;
             auto xyPoints = it->second;
 
             // Populate data points
-            Bool_t allPointsZero = kTRUE;   // Power values are all 0
-            Bool_t allPoints1To10 = kTRUE;  // Power values are default 1,2,3,4,54,6,7,8,9,10
+            Bool_t allPointsZero = kTRUE;   // To exclude power values all 0
+            Bool_t allPoints1To10 = kTRUE;  // To exclude power values Semishop default 1,2,3,4,54,6,7,8,9,10
             for (int i=0; i < 11; i++){
                 double x = xyPoints.x[i];
                 double y = xyPoints.y[i];
@@ -241,10 +270,10 @@ void MyFrame::onPlotButtonClicked() {
         mg->SetTitle(title);
         mg->Draw("ALP");
 
-        // ROOT is terrible. Need to do things in "its" right o
-        // mg->GetXaxis()->SetLimits(0, 100);
-        // mg->GetXaxis()->CenterTitle(true);
-        // mg->GetYaxis()->CenterTitle(true);
+        // ROOT is terrible. Need to do things in "its" right order
+        mg->GetXaxis()->SetLimits(0, 100);
+        mg->GetXaxis()->CenterTitle(true);
+        mg->GetYaxis()->CenterTitle(true);
 
         // Build and align legend
         // Cannot do it here because legend creation interferes with other primitives!
@@ -267,24 +296,19 @@ void MyFrame::onPlotButtonClicked() {
     // Add multi-title with modified date
     TString title = "Laser Power Table Graphs ";
 
-    // Add time-stamp to the title
+    // Add laser powers file Modification Date to the title
     TString filename = configPath;
     filename += "/Configuration/Common/System/LaserPower.setting.xml";
     FileStat_t fs;
     gSystem->GetPathInfo(filename.Data(), fs);
-
-    TTimeStamp* timeStamp = new TTimeStamp();
-    timeStamp->Set((UInt_t)fs.fMtime, kFALSE, 0, kFALSE);
-    TString timeStampString = timeStamp->AsString("s");
-    Int_t space = timeStampString.First(' ');
-    Int_t len = timeStampString.Length();
-    timeStampString.Remove(space,len-space);
-
-    title += timeStampString.Data();
+    title += DateHelper::formatTimeStamp(fs.fMtime);
     CanvasHelper::addMultiCanvasTitle(canvas, title);
 
     // Tweak canvas
     CanvasHelper::getInstance()->addCanvas(canvas);
+
+    // Enable Save button
+    saveButton->SetEnabled(kTRUE);
 }
 
 int MyFrame::processLensXML() {

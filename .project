@@ -3,7 +3,7 @@
 	<name>hc-power-table-graphs</name>
 	<comment></comment>
 	<projects>
-		<project>root</project>
+		<project>root-6.36.06</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
