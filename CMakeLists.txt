@@ -61,7 +61,7 @@ include_directories(./)
 # If portable build - set RPATH to find shared libraries relative to executable location
 if(PORTABLE_BUILD)
     message("PORTABLE_BUILD is defined")
-    SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+    # SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
     SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
 endif()
 
