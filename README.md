@@ -17,17 +17,15 @@ It is possible to compile and run the application on either Windows, macOS or Li
 ### Prerequisites
 
 1. Download and run [Visual Studio Build Tools](https://aka.ms/vs/stable/vs_BuildTools.exe).
-2. Install the "Desktop development with C++" package and install it with default components.
-3. Download and install ROOT release for Windows. Use `Windows Visual Studio 2022 64-bit x64` executable from the [latest release page](https://root.cern/install/all_releases/). During the installation ensure ROOT environment is added to the system PATH.
-4. ROOT releases not necessarily includes the Fourier Transform library (FFTW). [Download it here](http://www.fftw.org/install/windows.html). Use x64 version. Unpack and copy the `libfftw3-3.dll` to ROOT's `bin` folder, e.g. `C:\root_v6.##.##\bin`.
-5. Above FFTW library is linked to ROOT's `libFFTW.dll` and should be renamed correctly. Rename `libfftw3-3.dll` to `fftw3-3.dll`.
-6. **Optional**. To ensure the correct name for the FFTW library, open ROOT's `libFFTW.dll` in [Dependencies](https://github.com/lucasg/Dependencies) (former [Dependency Walker](https://dependencywalker.com/)) program. The correct name for the FFTW library will be listed as a missing dependency in the top-right panel.
+2. Select only "Desktop development with C++" checkbox and install it with default components.
+3. Download and install ROOT release for Windows. Use `Windows Visual Studio 2022 64-bit x64` executable from the [latest release page](https://root.cern/install/all_releases/).
+4. During the ROOT installation ensure ROOT environment is added to the system PATH.
 
 ### Compilation
 
 1. Download and extract the program source code (green button on the top of this page).
-2. Open Developer Command Prompt from the Start menu.
-3. In the Command Prompt navigate to extracted program folder, e.g. `cd C:\Users\<your-user>\Downloads\hc-power-table-graphs`.
+2. Open `Developer Command Prompt` from Windows Start menu.
+3. In the Command Prompt navigate to extracted program folder. Execute `cd C:\Users\<your-user>\Downloads\hc-power-table-graphs`.
 4. Run `.\install.bat`.
 
 ### Execution
