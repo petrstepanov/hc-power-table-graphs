@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for RootTest, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.15)
 
 project ("PowerGraphs" LANGUAGES CXX)
 
@@ -60,8 +60,9 @@ include_directories(./)
 
 # If portable build - set RPATH to find shared libraries relative to executable location
 if(PORTABLE_BUILD)
-    message("PORTABLE_BUILD is defined")
+    message(STATUS "PORTABLE_BUILD is defined")
     # SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+    # Set rpath to use for installed targets (here - shared libraries)
     SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
 endif()
 
@@ -139,10 +140,31 @@ install(TARGETS ${PROJECT_NAME}Lib
 )
 
 # Install ROOT pre-compiled modules (*.pcm files)
+# DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
 file(GLOB_RECURSE pcm_files "${CMAKE_CURRENT_BINARY_DIR}/*.pcm")
 install(FILES ${pcm_files} DESTINATION ${PROJECT_NAME})
 
 # Install executable
+# DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
 install(TARGETS ${PROJECT_NAME}
     DESTINATION ${PROJECT_NAME}
 )
+
+# Install iapplication icon and launcher (Linux only)
+IF(UNIX)
+    # Install icon
+    install(CODE "MESSAGE(STATUS \"Installing icon\")")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.png" DESTINATION "$ENV{HOME}/.local/share/icons/hicolor/256x256/apps")
+    # Update icon cache
+    install(CODE "MESSAGE(STATUS \"Updating icon cache\")")
+    set (update_icon_cache_cmd "gtk-update-icon-cache")
+    install(CODE "execute_process(COMMAND \"${update_icon_cache_cmd}\")")
+    # Install launcher
+    install(CODE "MESSAGE(STATUS \"Installing launcher\")")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.desktop" DESTINATION "$ENV{HOME}/.local/share/applications")
+    # Update launcher cache
+    install(CODE "MESSAGE(STATUS \"Updating launcher cache\")")
+    set (update_launcher_cache_cmd "xdg-desktop-menu")
+    set (update_launcher_cache_args "forceupdate")
+    install(CODE "execute_process(COMMAND \"${update_launcher_cache_cmd}\" \"${update_launcher_cache_args}\")")
+ENDIF()

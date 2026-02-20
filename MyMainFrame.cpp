@@ -17,7 +17,7 @@
 #include <iostream>
 #include "MyMainFrame.h"
 
-#include "power-graphs.xpm"
+#include "PowerGraphs.xpm"
 
 // Need for SIGNALS/SLOTS below - Connect to exit()
 ClassImp(MyMainFrame);
@@ -26,10 +26,17 @@ MyMainFrame::MyMainFrame() : TGMainFrame(gClient->GetRoot(), 1024, 600) {
     // For the X window system
     SetWindowName("Laser Power Table Plots");
 
+    // This I am not sure if we need this? Does not seem to do anything, however let it be here.
+    SetIconName("PowerGraphs");
+
+    // In GNOME, SetClassHints() tells WM to pick application icon installed on the system
+    SetClassHints("PowerGraphs", "PowerGraphs");
+
     // Icon how-to:
     // * Design 256x256 .png
     // * In GIMP export to .xpm
     // * Include .xpm with #include directive above
+    // * Ensure "const char* []" is in .xpm (not static)
     // * Convert const char* to char** by droppiong const:
     //   https://stackoverflow.com/questions/833034/how-to-convert-const-char-to-char
     SetIconPixmap(const_cast<char **>(power_graphs_xpm));

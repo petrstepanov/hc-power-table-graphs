@@ -1,5 +1,5 @@
 /* XPM */
-static char * power_graphs_xpm[] = {
+const char * power_graphs_xpm[] = {
 "128 128 392 2",
 "  	c None",
 ". 	c #CC0000",
