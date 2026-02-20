@@ -26,8 +26,8 @@ It is possible to compile and run the application on either Windows, macOS or Li
 1. Download and extract the [program source code](https://github.com/petrstepanov/hc-power-table-graphs/archive/refs/heads/main.zip).
 2. Reveal the downloaded `.zip` archive in Windows Explorer. Right-click and select `Extract All...`.
 3. Open `Developer Command Prompt` from Windows Start menu.
-4. In the Command Prompt navigate to extracted program folder. Execute `cd %userprofile%\Downloads\hc-power-table-graphs-main`.
-5. Type and run `.\install.bat`.
+4. In the Command Prompt navigate to extracted program folder. Execute `cd %userprofile%\Downloads\hc-power-table-graphs-main\hc-power-table-graphs-main`.
+5. Type and run `install.bat`.
 
 ### Execution
 
