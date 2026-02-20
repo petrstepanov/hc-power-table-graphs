@@ -31,7 +31,7 @@ It is possible to compile and run the application on either Windows, macOS or Li
 
 ### Execution
 
-Find and run `PowerGraphs.exe` in your home folder under `Applications\PowerGraphs`.
+Locate and run `PowerGraphs.exe` in your user home folder under `Applications\PowerGraphs`.
 
 ## Installation on Linux or macOS
 
