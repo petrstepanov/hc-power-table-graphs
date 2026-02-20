@@ -2,7 +2,7 @@
 
 Program plots laser power table calibration graphs imported from the SemiShop program. Software imports XML configuration files, detects installed lasers, lenses and plots corresponding laser power graphs for each installed lens.
 
-<img src="http://petrstepanov.com/static/screenshot.png" alt="Power Table Graphs for SemiShop" style="width: 100%;"/>
+<img src="https://raw.githubusercontent.com/petrstepanov/hc-power-table-graphs/refs/heads/main/screenshot.png" alt="Power Table Graphs for SemiShop" style="width: 100%;"/>
 
 Application is written in C++ and utilized CERN ROOT libraries version 6.36.
 
