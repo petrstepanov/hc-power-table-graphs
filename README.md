@@ -1,6 +1,10 @@
 # Power Table Graphs
 
-Program plots laser power table calibration graphs imported from the SemiShop program. Software imports XML configuration files, detects installed lasers, lenses and plots corresponding laser power graphs for each installed lens.
+Program plots laser power table calibration graphs imported from the SemiShop program. Software workflow id following:
+* User specifies the SemiShop root folder, e.g. `C:/Hamamatsu/SemiShop4.18.0`.
+* Program locates and parses XML files from the child `Configuration` folder.
+* Available lasers and lenses installed on the tool are detected.
+* Corresponding laser power graphs are plotted for each installed lens.
 
 <img src="https://raw.githubusercontent.com/petrstepanov/hc-power-table-graphs/refs/heads/main/screenshot.png" alt="Power Table Graphs for SemiShop" style="width: 100%;"/>
 
