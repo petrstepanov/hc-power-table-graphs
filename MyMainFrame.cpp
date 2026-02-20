@@ -13,8 +13,11 @@
 
 // #include "TImage.h"
 #include <TApplication.h>
+#include <TGClient.h>
 #include <iostream>
 #include "MyMainFrame.h"
+
+#include "power-graphs.xpm"
 
 // Need for SIGNALS/SLOTS below - Connect to exit()
 ClassImp(MyMainFrame);
@@ -22,6 +25,14 @@ ClassImp(MyMainFrame);
 MyMainFrame::MyMainFrame() : TGMainFrame(gClient->GetRoot(), 1024, 600) {
     // For the X window system
     SetWindowName("Laser Power Table Plots");
+
+    // Icon how-to:
+    // * Design 256x256 .png
+    // * In GIMP export to .xpm
+    // * Include .xpm with #include directive above
+    // * Convert const char* to char** by droppiong const:
+    //   https://stackoverflow.com/questions/833034/how-to-convert-const-char-to-char
+    SetIconPixmap(const_cast<char **>(power_graphs_xpm));
 
     SetCleanup(kDeepCleanup);
 
