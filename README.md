@@ -16,9 +16,9 @@ It is possible to compile and run the application on either Windows, macOS or Li
 
 ### Prerequisites
 
-1. Download and run [Visual Studio Build Tools](https://aka.ms/vs/stable/vs_BuildTools.exe).
-2. Select only "Desktop development with C++" checkbox and install it with default components.
-3. Download and install ROOT release for Windows. Use `Windows Visual Studio 2022 64-bit x64` executable from the [latest release page](https://root.cern/install/all_releases/).
+1. Download and run [Visual Studio 2022 Build Tools](https://aka.ms/vs/17/release/vs_buildtools.exe).
+2. Select only `Desktop development with C++` checkbox and install it with default components.
+3. Download and install [ROOT v6.36.06 x64 release for Windows](https://root.cern/download/root_v6.36.06.win64.python311.vc17.exe).
 4. During the ROOT installation ensure ROOT environment is added to the system PATH.
 
 ### Compilation
