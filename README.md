@@ -29,7 +29,7 @@ It is possible to compile and run the application on either Windows, macOS or Li
 4. In the Command Prompt navigate to extracted program folder. Execute `cd %userprofile%\Downloads\hc-power-table-graphs-main\hc-power-table-graphs-main`.
 5. Type and run `install.bat`.
 
-### Execution
+### Executable
 
 Locate and run `PowerGraphs.exe` in your user home folder under `Applications\PowerGraphs`.
 
@@ -42,12 +42,12 @@ Open Terminal and clone program source files in your home folder:
 ```
 cd
 git clone https://github.com/petrstepanov/hc-power-table-graphs
-cd sw-calculator
+cd hc-power-table-graphs
 ```
 Check program dependencies and create native makefile with CMake. Finally build and install. System will ask for your password to install the app.
 
 ```
-cmake ./
+cmake -DPORTABLE_INSTALL:BOOL=ON ./
 make
 sudo make install
 ```
@@ -68,7 +68,30 @@ rm -rf ~/hc-power-table-graphs
 
 Find application in the system menu. Alternatively, open Termnal and type `hc-power-table-graphs` to launch the program.
 
+## Installation on macOS
 
+### Prerequisites
+
+Install Xcode command-line tools (includes `gcc` compiler, `git` version control, other utilities). In terminal, run:
+
+```
+xcode-select --install
+```
+
+Install Homebrew package manager. In Terminal, execute:
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+Add `brew` command to your `$PATH` environment variable. Details will be summarized in the Terminal.
+
+Install CMake build system. In terminal, type:
+
+```
+brew install cmake
+```
+
+Download and install [latest stable ROOT](https://root.cern/install/all_releases/) release for macOS
 ---
 
 Shoot me an email with feedback or questions: [stepanovps@gmail.com](mailto:stepanovps@gmail.com)

@@ -58,16 +58,36 @@ root_generate_dictionary(
 # https://runebook.dev/en/articles/cmake/command/add_library
 include_directories(./)
 
-# If portable build - set RPATH to find shared libraries relative to executable location
-if(PORTABLE_BUILD)
-    message(STATUS "PORTABLE_BUILD is defined")
+# If portable build and install - set relative Run Path for shared library (relative to executable location)
+# Tip: CMake applies different run paths for built shared libraries and for installed shared libraries. 
+
+if(PORTABLE_INSTALL)
+    message(STATUS "PORTABLE_INSTALL is defined")
+    # Set rpath to use for installed targets (here - shared libraries) $ORIGIN - on Linux, @rpath on macOS (former @loader_path)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        # SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        # SET(CMAKE_INSTALL_RPATH "@rpath/")
+    else()
+        # On Windows, relative .dll search path is always included in executable, no need to set rpath
+    endif()
     # SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
-    # Set rpath to use for installed targets (here - shared libraries)
-    SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
 endif()
 
 # Create shared library. CMake adds "lib" prefix automatically
 add_library(${PROJECT_NAME}Lib SHARED ${SOURCES_FOR_DICT} G__${PROJECT_NAME}.cxx)
+
+if(PORTABLE_INSTALL)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        SET_TARGET_PROPERTIES(${PROJECT_NAME}Lib PROPERTIES
+            # MACOSX_RPATH FALSE
+#            BUILD_RPATH "@executable_path/abc/lib"
+ #           INSTALL_RPATH "@loader_path/abc/lib"
+            BUILD_RPATH "/abc/lib"
+            INSTALL_RPATH "/abc/lib2"
+            )
+    endif()
+endif()
 
 # Compose list of ROOT libraries with "ROOT::" prefix - need to link them to the shared library
 set(LIB_NAMES "")
