@@ -58,35 +58,30 @@ root_generate_dictionary(
 # https://runebook.dev/en/articles/cmake/command/add_library
 include_directories(./)
 
-# If portable build and install - set relative Run Path for shared library (relative to executable location)
-# Tip: CMake applies different run paths for built shared libraries and for installed shared libraries. 
+# Create shared library. CMake adds "lib" prefix automatically
+add_library(${PROJECT_NAME}Lib SHARED ${SOURCES_FOR_DICT} G__${PROJECT_NAME}.cxx)
 
+
+# If portable build and install - relative Run Path for shared library (relative to executable location)
+# Tip: CMake applies different run paths for built shared libraries and for installed shared libraries. 
 if(PORTABLE_INSTALL)
     message(STATUS "PORTABLE_INSTALL is defined")
     # Set rpath to use for installed targets (here - shared libraries) $ORIGIN - on Linux, @rpath on macOS (former @loader_path)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        # SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
+        # TODO: try dependency walker on linux
+        SET(CMAKE_INSTALL_RPATH "$ORIGIN/")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        # SET(CMAKE_INSTALL_RPATH "@rpath/")
-    else()
-        # On Windows, relative .dll search path is always included in executable, no need to set rpath
-    endif()
-    # SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
-endif()
-
-# Create shared library. CMake adds "lib" prefix automatically
-add_library(${PROJECT_NAME}Lib SHARED ${SOURCES_FOR_DICT} G__${PROJECT_NAME}.cxx)
-
-if(PORTABLE_INSTALL)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        # On macOS, default RPATHs will be used in the build tree, but cleared when installing the targets
+        # With "Dependency Walker" for macOS it is possible to inspect build targets' RPATH and assign same RPATHs to installed items:
+        SET(CMAKE_INSTALL_RPATH "${ROOT_LIBRARY_DIR};@executable_path") # for executable
         SET_TARGET_PROPERTIES(${PROJECT_NAME}Lib PROPERTIES
-            # MACOSX_RPATH FALSE
-#            BUILD_RPATH "@executable_path/abc/lib"
- #           INSTALL_RPATH "@loader_path/abc/lib"
-            BUILD_RPATH "/abc/lib"
-            INSTALL_RPATH "/abc/lib2"
-            )
+            INSTALL_RPATH "${ROOT_LIBRARY_DIR}"                         # for shared library
+        )        
+    else()
+        # On Windows, relative .dll search path is always included in executable, no need to set relative run path
     endif()
+    # Use relative paths in the build tree (optional, for convenience during development)
+    # SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 endif()
 
 # Compose list of ROOT libraries with "ROOT::" prefix - need to link them to the shared library
@@ -127,18 +122,6 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 # Link executable to the shared library
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_NAME}Lib)
 
-# Set shared libraries search path relative to executable location
-# set_target_properties(${PROJECT_NAME} PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Copy ROOT libraries into Release folder for fully portable executable
-# if (WIN32)
-#     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_directory
-#         "${ROOT_BIN_DIR}"
-#         $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-# endif()
-
 # Get user's HOME directory location (for installation path)
 IF(UNIX OR APPLE)
     SET(USER_HOME_DIR "$ENV{HOME}")
@@ -161,8 +144,8 @@ install(TARGETS ${PROJECT_NAME}Lib
 
 # Install ROOT pre-compiled modules (*.pcm files)
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-file(GLOB_RECURSE pcm_files "${CMAKE_CURRENT_BINARY_DIR}/*.pcm")
-install(FILES ${pcm_files} DESTINATION ${PROJECT_NAME})
+install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
+        CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}\")")
 
 # Install executable
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
@@ -171,7 +154,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install iapplication icon and launcher (Linux only)
-IF(UNIX)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Install icon
     install(CODE "MESSAGE(STATUS \"Installing icon\")")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.png" DESTINATION "$ENV{HOME}/.local/share/icons/hicolor/256x256/apps")
@@ -187,4 +170,4 @@ IF(UNIX)
     set (update_launcher_cache_cmd "xdg-desktop-menu")
     set (update_launcher_cache_args "forceupdate")
     install(CODE "execute_process(COMMAND \"${update_launcher_cache_cmd}\" \"${update_launcher_cache_args}\")")
-ENDIF()
+endif()

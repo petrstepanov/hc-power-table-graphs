@@ -12,7 +12,7 @@ Application is written in C++ and utilized CERN ROOT libraries version 6.36.
 
 It is possible to compile and run the application on either Windows, macOS or Linux.
 
-## Installation on Windows
+## 🪟 Installation on Windows
 
 ### Prerequisites
 
@@ -29,11 +29,11 @@ It is possible to compile and run the application on either Windows, macOS or Li
 4. In the Command Prompt navigate to extracted program folder. Execute `cd %userprofile%\Downloads\hc-power-table-graphs-main\hc-power-table-graphs-main`.
 5. Type and run `install.bat`.
 
-### Executable
+### Run Executable
 
 Locate and run `PowerGraphs.exe` in your user home folder under `Applications\PowerGraphs`.
 
-## Installation on Linux or macOS
+## 🐧 Installation on Linux
 
 Install CERN ROOT on your system. Refer to [official install page](https://root.cern/install/#linux-package-managers) for more details.
 
@@ -51,12 +51,6 @@ cmake -DPORTABLE_INSTALL:BOOL=ON ./
 make
 sudo make install
 ```
-On linux you can install application launcher:
-
-```
-make install-launcher
-```
-To install app launcher on macOS run package `resources/hc-power-table-graphs.pkg`.
 
 Program source files are not needed any more and can be removed from your computer:
 
@@ -68,7 +62,7 @@ rm -rf ~/hc-power-table-graphs
 
 Find application in the system menu. Alternatively, open Termnal and type `hc-power-table-graphs` to launch the program.
 
-## Installation on macOS
+## 🍏 Installation on macOS
 
 ### Prerequisites
 
@@ -78,20 +72,50 @@ Install Xcode command-line tools (includes `gcc` compiler, `git` version control
 xcode-select --install
 ```
 
-Install Homebrew package manager. In Terminal, execute:
+Install MacPorts package manager ([not Homerbrew](https://root-forum.cern.ch/t/issue-with-root-on-mac-sequoia-still/63435/6)). [Download here](https://www.macports.org/install.php). Restart Terminal after installation.
+Install CMake build system and a few program dependencies. In terminal, type:
 
 ```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-Add `brew` command to your `$PATH` environment variable. Details will be summarized in the Terminal.
-
-Install CMake build system. In terminal, type:
-
-```
-brew install cmake
+sudo port install cmake
+sudo port install giflib
+sudo port install libjpeg-turbo
+sudo port install tiff
+sudo port install libpng
 ```
 
-Download and install [latest stable ROOT](https://root.cern/install/all_releases/) release for macOS
+ROOT v6.36.08 is compiled with `libpng` library indifferent location. Therefore, we create symlink:
+
+```
+sudo mkdir /opt/X11/lib
+sudo ln -s /opt/local/lib/libpng16.16.dylib /opt/X11/lib/libpng16.16.dylib
+```
+
+Download and install [latest stable ROOT](https://root.cern/install/all_releases/) release for macOS.
+
+### Compilation
+
+Check out the program source code and perform out-of-source build (recommended):
+
+```
+cd && git clone https://github.com/petrstepanov/hc-power-table-graphs
+mkdir hc-power-table-graphs-build && cd hc-power-table-graphs-build
+cmake -DPORTABLE_INSTALL:BOOL=ON ../hc-power-table-graphs
+make
+make install
+```
+
+Remove program source and build files from your computer:
+
+```
+rm -rf ~/hc-power-table-graphs*
+```
+
+TODO: create `.pkg` app launcher on macOS?
+
+### Run Executable
+
+Locate and run `PowerGraphs` in your user home folder under `Applications/PowerGraphs`.
+
 ---
 
-Shoot me an email with feedback or questions: [stepanovps@gmail.com](mailto:stepanovps@gmail.com)
+Send me an email with feedback or questions: [stepanovps@gmail.com](mailto:stepanovps@gmail.com)
