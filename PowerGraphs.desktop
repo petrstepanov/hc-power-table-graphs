@@ -4,8 +4,8 @@ Type=Application
 Name=PowerGraphs
 Comment=Visualizing SemiShop Laser Power Tables
 Icon=PowerGraphs
-Exec=sh -c "\\$HOME/Applications/PowerGraphs/PowerGraphs"
+Exec=sh -c "\\$HOME/.local/bin/PowerGraphs"
 Terminal=false
-Categories=Education;Science
+Categories=Science
 # Windows Manager groups windows with the same WM_CLASS
 StartupWMClass=PowerGraphs
