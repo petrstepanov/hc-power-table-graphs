@@ -130,28 +130,49 @@ ELSEIF(WIN32)
 ENDIF()
 message(STATUS "User Home Directory: ${USER_HOME_DIR}")
 
-# Change CMake install path to home folder - does not require admin privileges
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+elseif(WIN32)
+endif()
+
+# Install paths for different platforms
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${USER_HOME_DIR}/Applications CACHE PATH "default install path" FORCE)
-    message("Default install path is changed to ${CMAKE_INSTALL_PREFIX}")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(CMAKE_INSTALL_PREFIX "${USER_HOME_DIR}/.local/bin" CACHE PATH "linux install path" FORCE)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        set(CMAKE_INSTALL_PREFIX "/Applications/${PROJECT_NAME}.app/Contents" CACHE PATH "macOS install path" FORCE)
+    elseif(WIN32)
+        set(CMAKE_INSTALL_PREFIX "${USER_HOME_DIR}\AppData\Local" CACHE PATH "Windows install path" FORCE)
+    endif()
+    message(STSTUS "Install path is set to ${CMAKE_INSTALL_PREFIX}")
 endif()
 
 # Install shared library
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-install(TARGETS ${PROJECT_NAME}Lib
-    DESTINATION ${PROJECT_NAME}
-)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    install(TARGETS ${PROJECT_NAME}Lib DESTINATION MacOS)
+else()
+    install(TARGETS ${PROJECT_NAME}Lib DESTINATION ${PROJECT_NAME})
+endif()
+
 
 # Install ROOT pre-compiled modules (*.pcm files)
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
-        CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}\")")
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
+            CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/MacOS\")")
+else()
+    install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
+            CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}\")")
+endif()
 
 # Install executable
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-install(TARGETS ${PROJECT_NAME}
-    DESTINATION ${PROJECT_NAME}
-)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    install(TARGETS ${PROJECT_NAME} DESTINATION MacOS)
+else()
+    install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME})
+endif()
 
 # Install iapplication icon and launcher (Linux only)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -170,4 +191,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set (update_launcher_cache_cmd "xdg-desktop-menu")
     set (update_launcher_cache_args "forceupdate")
     install(CODE "execute_process(COMMAND \"${update_launcher_cache_cmd}\" \"${update_launcher_cache_args}\")")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # Install icon
+    install(CODE "MESSAGE(STATUS \"Installing icon\")")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.icns" DESTINATION Resources)
+    # Install launcher
+    install(CODE "MESSAGE(STATUS \"Installing Info.plist\")")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" DESTINATION "./")
 endif()

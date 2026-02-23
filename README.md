@@ -110,11 +110,9 @@ Remove program source and build files from your computer:
 rm -rf ~/hc-power-table-graphs*
 ```
 
-TODO: create `.pkg` app launcher on macOS?
-
 ### Run Executable
 
-Locate and run `PowerGraphs` in your user home folder under `Applications/PowerGraphs`.
+Locate and run `PowerGraphs` in Finder under the `Applications` folder. Alternatively, use `Spotlight` to find `PowerGraphs`.
 
 ---
 
