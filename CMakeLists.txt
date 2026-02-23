@@ -154,7 +154,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         set(CMAKE_INSTALL_PREFIX "/Applications/${PROJECT_NAME}.app/Contents" CACHE PATH "macOS install path" FORCE)
     elseif(WIN32)
-        set(CMAKE_INSTALL_PREFIX "${USER_HOME_DIR}\AppData\Local" CACHE PATH "Windows install path" FORCE)
+        set(CMAKE_INSTALL_PREFIX "${USER_HOME_DIR}/AppData/Local/${PROJECT_NAME}" CACHE PATH "Windows install path" FORCE)
     endif()
     message(STSTUS "Install path is set to ${CMAKE_INSTALL_PREFIX}")
 endif()
@@ -168,7 +168,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 elseif(WIN32)
     install(TARGETS ${PROJECT_NAME}Lib DESTINATION "./")
 endif()
-
 
 # Install ROOT pre-compiled modules (*.pcm files)
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
@@ -188,9 +187,9 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     install(TARGETS ${PROJECT_NAME} DESTINATION "./")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    install(TARGETS ${PROJECT_NAME} DESTINATION MacOS)
+    install(TARGETS ${PROJECT_NAME} DESTINATION "MacOS")
 elseif(WIN32)
-    install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME})
+    install(TARGETS ${PROJECT_NAME} DESTINATION "./")
 endif()
 
 # Install iapplication icon and launcher
@@ -217,4 +216,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # Install launcher
     install(CODE "MESSAGE(STATUS \"Installing Info.plist\")")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" DESTINATION "./")
+elseif(WIN32)
+    # Install icon
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.ico" DESTINATION "./")
+    # Desktop shortcut is created in the "install.bat"
 endif()
