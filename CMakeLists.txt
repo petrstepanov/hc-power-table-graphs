@@ -19,6 +19,13 @@ set(CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# https://patorjk.com/software/taag/#p=display&f=RubiFont&t=Files&x=none&v=4&h=4&w=80&we=false
+
+# ▗▄▄▄▖▗▄▄▄▖▗▖   ▗▄▄▄▖ ▗▄▄▖
+# ▐▌     █  ▐▌   ▐▌   ▐▌   
+# ▐▛▀▀▘  █  ▐▌   ▐▛▀▀▘ ▝▀▚▖
+# ▐▌   ▗▄█▄▖▐▙▄▄▖▐▙▄▄▖▗▄▄▞▘
+
 # Define source files
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
@@ -53,6 +60,11 @@ root_generate_dictionary(
     MODULE ${PROJECT_NAME} 
     LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/LinkDef.h
 )
+
+# ▗▖   ▗▄▄▄▖▗▄▄▖ ▗▄▄▖  ▗▄▖ ▗▄▄▖▗▖  ▗▖
+# ▐▌     █  ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▝▚▞▘ 
+# ▐▌     █  ▐▛▀▚▖▐▛▀▚▖▐▛▀▜▌▐▛▀▚▖ ▐▌  
+# ▐▙▄▄▖▗▄█▄▖▐▙▄▞▘▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌ ▐▌  
 
 # Our shared library source files include headers (DateHelper.h), we need to tell CMake where to find them
 # https://runebook.dev/en/articles/cmake/command/add_library
@@ -122,6 +134,11 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 # Link executable to the shared library
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_NAME}Lib)
 
+# ▗▄▄▄▖▗▖  ▗▖ ▗▄▄▖▗▄▄▄▖▗▄▖ ▗▖   ▗▖   
+#   █  ▐▛▚▖▐▌▐▌     █ ▐▌ ▐▌▐▌   ▐▌   
+#   █  ▐▌ ▝▜▌ ▝▀▚▖  █ ▐▛▀▜▌▐▌   ▐▌   
+# ▗▄█▄▖▐▌  ▐▌▗▄▄▞▘  █ ▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖
+
 # Get user's HOME directory location (for installation path)
 IF(UNIX OR APPLE)
     SET(USER_HOME_DIR "$ENV{HOME}")
@@ -130,12 +147,7 @@ ELSEIF(WIN32)
 ENDIF()
 message(STATUS "User Home Directory: ${USER_HOME_DIR}")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-elseif(WIN32)
-endif()
-
-# Install paths for different platforms
+# Specify install paths (prefix) for different platforms
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CMAKE_INSTALL_PREFIX "${USER_HOME_DIR}/.local/bin" CACHE PATH "linux install path" FORCE)
@@ -149,32 +161,39 @@ endif()
 
 # Install shared library
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    install(TARGETS ${PROJECT_NAME}Lib DESTINATION "./")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     install(TARGETS ${PROJECT_NAME}Lib DESTINATION MacOS)
-else()
-    install(TARGETS ${PROJECT_NAME}Lib DESTINATION ${PROJECT_NAME})
+elseif(WIN32)
+    install(TARGETS ${PROJECT_NAME}Lib DESTINATION "./")
 endif()
 
 
 # Install ROOT pre-compiled modules (*.pcm files)
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
+            CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}\")")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
             CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}/MacOS\")")
-else()
+elseif(WIN32)
     install(CODE "file(GLOB _pcms \"${CMAKE_CURRENT_BINARY_DIR}/*.pcm\")"
             CODE "file(INSTALL \${_pcms} DESTINATION \"\${CMAKE_INSTALL_PREFIX}\")")
 endif()
 
 # Install executable
 # DESTINATION below is is relative to CMAKE_INSTALL_PREFIX
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    install(TARGETS ${PROJECT_NAME} DESTINATION "./")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     install(TARGETS ${PROJECT_NAME} DESTINATION MacOS)
-else()
+elseif(WIN32)
     install(TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME})
 endif()
 
-# Install iapplication icon and launcher (Linux only)
+# Install iapplication icon and launcher
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Install icon
     install(CODE "MESSAGE(STATUS \"Installing icon\")")

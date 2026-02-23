@@ -37,19 +37,14 @@ Locate and run `PowerGraphs.exe` in your user home folder under `Applications\Po
 
 Install CERN ROOT on your system. Refer to [official install page](https://root.cern/install/#linux-package-managers) for more details.
 
-Open Terminal and clone program source files in your home folder:
+Open Terminal, clone program source files to your home folder, create a folder for out-of-source build. Then build and install.
 
 ```
-cd
-git clone https://github.com/petrstepanov/hc-power-table-graphs
-cd hc-power-table-graphs
-```
-Check program dependencies and create native makefile with CMake. Finally build and install. System will ask for your password to install the app.
-
-```
-cmake -DPORTABLE_INSTALL:BOOL=ON ./
+cd && git clone https://github.com/petrstepanov/hc-power-table-graphs
+mkdir hc-power-table-graphs-build && cd hc-power-table-graphs-build
+cmake -DPORTABLE_INSTALL:BOOL=ON ../hc-power-table-graphs
 make
-sudo make install
+make install
 ```
 
 Program source files are not needed any more and can be removed from your computer:
@@ -60,7 +55,7 @@ rm -rf ~/hc-power-table-graphs
 
 ## Running program
 
-Find application in the system menu. Alternatively, open Termnal and type `hc-power-table-graphs` to launch the program.
+Find application in the system application menu under the `Science` category. Alternatively, open Termnal and type `PowerGraphs` to launch the program.
 
 ## 🍏 Installation on macOS
 

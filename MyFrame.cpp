@@ -77,7 +77,7 @@ MyFrame::MyFrame(const TGWindow* p) : TGVerticalFrame(p) {
     exitButton = new TGTextButton(hFrame2, "Exit");
     hFrame2->AddFrame(exitButton, new TGLayoutHints(kLHintsLeft | kLHintsTop, 0, 0, 0, 0));
 
-    saveButton = new TGTextButton(hFrame2, "Save");
+    saveButton = new TGTextButton(hFrame2, "Save Image...");
     hFrame2->AddFrame(saveButton, new TGLayoutHints(kLHintsRight | kLHintsTop, 0, 0, 0, 0));
     saveButton->SetEnabled(kFALSE);
 
